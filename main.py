@@ -6,11 +6,11 @@ import re
 from time import time
 
 PAGE = "https://ru.wikipedia.org/wiki/%D0%92%D0%B8%D0%BA%D0%B8"
-MAX_DEPTH = 2
+MAX_DEPTH = 1
 DB_USER = "master"
-DB_PASS = "yourPassword"
+DB_PASS = "master"
 DB_NAME = "test_db"
-DB_HOST = "127.0.0.1"
+DB_HOST = "db"
 
 conn = None
 reg_exp = r'<a[^<>]*href="(\/wiki\/.*?)"[^<>]*>'
@@ -35,7 +35,7 @@ async def add_to_db(url, depth, parent):
             ''', url, depth)
         if depth == 0:
             return id_n
-        await conn.fetchval('''
+        res = await conn.execute('''
             INSERT INTO links(from_page_id, link_id) VALUES($1, $2)
             ''', parent, id_n)
     except UniqueViolationError:
