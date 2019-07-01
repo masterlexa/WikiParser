@@ -6,7 +6,7 @@ import re
 from time import time
 
 PAGE = "https://ru.wikipedia.org/wiki/%D0%92%D0%B8%D0%BA%D0%B8"
-MAX_DEPTH = 1
+MAX_DEPTH = 2
 DB_USER = "master"
 DB_PASS = "master"
 DB_NAME = "test_db"
@@ -33,8 +33,14 @@ async def add_to_db(url, depth, parent):
         id_n = await conn.fetchval('''
             INSERT INTO pages(URL, request_depth) VALUES($1, $2) RETURNING id;
             ''', url, depth)
+        #Если это корневой документ, возвращаем его ИД, не пишем в журнал
         if depth == 0:
             return id_n
+        #Предобработка данных для журнала
+        if type(id_n) == list:
+            id_n = id_n[0]['id']
+        if type(parent) == list:
+            parent = parent[0]['id']
         res = await conn.execute('''
             INSERT INTO links(from_page_id, link_id) VALUES($1, $2)
             ''', parent, id_n)
